@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyWall - Python Network Firewall & Security Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.85);
+            --border-color: rgba(75, 85, 99, 0.4);
+            --border-glow: rgba(56, 189, 248, 0.3);
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(239, 68, 68, 0.08) 0%, transparent 40%);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            padding: 24px 20px;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+            font-size: 22px;
+        }
+
+        .brand-text h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .policy-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #fca5a5;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .policy-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--accent-red);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent-red);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+        }
+
+        .stat-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .stat-total { color: var(--accent-cyan); }
+        .stat-allow { color: var(--accent-green); }
+        .stat-block { color: var(--accent-red); }
+        .stat-rules { color: #a78bfa; }
+
+        /* Action Toolbar */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 18px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+        }
+        .btn-primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* Layout Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 960px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Panel Card */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #f9fafb;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            background: #0d131f;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 13px;
+            font-family: var(--font-main);
+            transition: border-color 0.2s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+        }
+
+        .form-help {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(17, 24, 39, 0.95);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(75, 85, 99, 0.25);
+            color: #e5e7eb;
+        }
+
+        tr:hover td {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .mono {
+            font-family: var(--font-mono);
+            font-size: 12px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-allow {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.35);
+        }
+
+        .badge-block {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+
+        .badge-proto {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-delete {
+            background: transparent;
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-delete:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 36px 20px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Flash message alerts */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">🛡️</div>
+            <div class="brand-text">
+                <h1>PyWall Sentinel</h1>
+                <p>Python 5-Tuple Network Packet Filtering Firewall</p>
+            </div>
+        </div>
+        <div class="policy-badge" title="Packets not explicitly allowed will be dropped">
+            <span class="policy-dot"></span>
+            Strict Default-Deny Active
+        </div>
+    </header>
+
+    <!-- Flash notification -->
+    {% if message %}
+    <div class="alert alert-success">
+        <span>✅</span> {{ message }}
+    </div>
+    {% endif %}
+
+    <!-- Metrics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Packets Inspected</div>
+            <div class="stat-value stat-total">{{ stats.total }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Allowed Traffic</div>
+            <div class="stat-value stat-allow">{{ stats.allowed }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Blocked / Dropped</div>
+            <div class="stat-value stat-block">{{ stats.blocked }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Active Rules</div>
+            <div class="stat-value stat-rules">{{ rules|length }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Action Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <form action="/simulate" method="POST" style="display: inline;">
+                <input type="hidden" name="count" value="6">
+                <button type="submit" class="btn btn-primary" id="btn-simulate">
+                    ⚡ Generate 6 Simulated Packets
+                </button>
+            </form>
+            <a href="/" class="btn btn-secondary">🔄 Refresh Data</a>
+        </div>
+        <div class="toolbar-group">
+            <form action="/clear_logs" method="POST" onsubmit="return confirm('Pakka saare logs delete karne hain?');" style="display: inline;">
+                <button type="submit" class="btn btn-danger">🗑️ Clear Audit Logs</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="main-grid">
+        <!-- Sidebar: Add Rule Form -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">➕ Add Firewall Rule</div>
+                </div>
+                <form action="/add_rule" method="POST">
+                    <div class="form-group">
+                        <label for="rule_name">Rule Name / Description</label>
+                        <input type="text" id="rule_name" name="rule_name" placeholder="e.g. Allow Web Proxy" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="protocol">Protocol</label>
+                        <select id="protocol" name="protocol">
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="*">* (Any Protocol)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="src_ip">Source IP</label>
+                        <input type="text" id="src_ip" name="src_ip" value="*" placeholder="e.g. 192.168.1.* or *" required>
+                        <div class="form-help">Use '*' for any source IP, or wildcard like 192.168.1.*</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dst_ip">Destination IP</label>
+                        <input type="text" id="dst_ip" name="dst_ip" value="*" placeholder="e.g. 192.168.1.100 or *" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dst_port">Destination Port</label>
+                        <input type="text" id="dst_port" name="dst_port" placeholder="e.g. 80, 8080 or *" required>
+                        <div class="form-help">Port number (e.g. 80), range (8000-8080), or '*'</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="action">Action</label>
+                        <select id="action" name="action">
+                            <option value="ALLOW">ALLOW (Permit Traffic)</option>
+                            <option value="BLOCK">BLOCK (Explicit Deny)</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+                        Save Rule to Engine
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Rules Card -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📜 Configured Rules ({{ rules|length }})</div>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Proto</th>
+                                <th>Port</th>
+                                <th>Action</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in rules %}
+                            <tr>
+                                <td class="mono">{{ r['id'] }}</td>
+                                <td><strong>{{ r['rule_name'] }}</strong></td>
+                                <td><span class="badge badge-proto">{{ r['protocol'] }}</span></td>
+                                <td class="mono">{{ r['dst_port'] }}</td>
+                                <td>
+                                    <span class="badge {{ 'badge-allow' if r['action'] == 'ALLOW' else 'badge-block' }}">
+                                        {{ r['action'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="/delete_rule/{{ r['id'] }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn-delete" title="Delete rule">✕</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="empty-state">No rules defined. Everything will be BLOCKED!</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Column: Real-time Traffic Audit Log -->
+        <div>
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        📡 Packet Inspection Audit Log (Recent {{ logs|length }})
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Verdict</th>
+                                <th>Proto</th>
+                                <th>Source (IP:Port)</th>
+                                <th>Destination (IP:Port)</th>
+                                <th>Inspection Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td class="mono" style="color: var(--text-muted); font-size: 11px;">
+                                    {{ log['timestamp'] }}
+                                </td>
+                                <td>
+                                    <span class="badge {{ 'badge-allow' if log['action'] == 'ALLOW' else 'badge-block' }}">
+                                        {{ log['action'] }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-proto">{{ log['protocol'] }}</span>
+                                </td>
+                                <td class="mono">
+                                    {{ log['src_ip'] }}:<span style="color: var(--text-muted);">{{ log['src_port'] }}</span>
+                                </td>
+                                <td class="mono">
+                                    {{ log['dst_ip'] }}:<strong style="color: #38bdf8;">{{ log['dst_port'] }}</strong>
+                                </td>
+                                <td style="font-size: 12px; color: #d1d5db;">
+                                    {{ log['matched_rule'] }}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    No packets inspected yet! Click <strong>"Generate 6 Simulated Packets"</strong> above to see the firewall in action.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
