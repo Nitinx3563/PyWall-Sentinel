@@ -11,7 +11,11 @@ Yeh file 2 tables handle karegi:
 import sqlite3
 import os
 
-DB_FILE = os.path.join(os.path.dirname(__file__), "firewall.db")
+# Vercel serverless environment strictly allows file writes only in /tmp
+if os.environ.get("VERCEL"):
+    DB_FILE = "/tmp/firewall.db"
+else:
+    DB_FILE = os.path.join(os.path.dirname(__file__), "firewall.db")
 
 
 def get_db_connection():

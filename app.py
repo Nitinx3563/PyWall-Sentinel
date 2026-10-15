@@ -24,6 +24,9 @@ from traffic_simulator import run_single_burst
 
 app = Flask(__name__)
 
+# Server startup pe database tables initialize karein (works locally & on Vercel)
+init_db()
+
 
 @app.route("/")
 def index():

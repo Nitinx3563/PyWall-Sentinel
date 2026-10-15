@@ -1,4 +1,4 @@
-"""
+b"""
 traffic_simulator.py
 --------------------
 Safe Network Traffic Simulator for Testing Python Firewall.
